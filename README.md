@@ -91,12 +91,12 @@ This repository documents a progressive study of **PyTorch**, one of the most po
 | CUDA (optional) | ≥ 11.7 |
 
 Install PyTorch:
+##### CPU only
 ```bash
-# CPU only
 pip install torch torchvision torchaudio
 ```
+##### With CUDA support
 ```
-# With CUDA support (adjust cu121 to your CUDA version)
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 ```
 ---
