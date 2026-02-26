@@ -94,7 +94,8 @@ Install PyTorch:
 ```bash
 # CPU only
 pip install torch torchvision torchaudio
-
+```
+```
 # With CUDA support (adjust cu121 to your CUDA version)
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 ```
