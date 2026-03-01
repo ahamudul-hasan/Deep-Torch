@@ -51,16 +51,6 @@ Shape: (569, 31)  →  1 label column + 30 feature columns
 
 ---
 
-## Prerequisites
-
-Install the required libraries before running the notebook:
-
-```bash
-pip install torch numpy pandas scikit-learn
-```
-
----
-
 ## Step-by-Step Walkthrough
 
 ---
