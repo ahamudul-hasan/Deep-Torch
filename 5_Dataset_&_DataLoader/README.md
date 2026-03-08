@@ -707,41 +707,106 @@ for epoch in range(100):
 
 ---
 
-## Key Takeaways 🎯
+## Dataset Class
 
-1. **Manual data handling** has 6 major problems:
-   - Memory inefficiency
-   - Slow convergence
-   - No standard interface
-   - No easy transformations
-   - No shuffling/sampling support
-   - No parallelization
+The `Dataset` class is essentially a **blueprint**. When you create a custom `Dataset`, you decide how data is loaded and returned.
 
-2. **Dataset & DataLoader** solve all 6 problems elegantly:
-   - Automatic batching → Efficient memory + faster convergence
-   - Universal interface → Works with any data type
-   - Transform pipelines → Easy preprocessing & augmentation
-   - Built-in shuffling & sampling → Better training
-   - Multi-worker loading → Faster data loading
+It defines three core methods:
 
-3. **Batch size** is a hyperparameter (typically: 32, 64, 128, 256)
+- **`__init__()`** — Tells how data should be loaded (file paths, in-memory arrays, transforms, etc.).
+- **`__len__()`** — Returns the total number of samples in the dataset.
+- **`__getitem__(index)`** — Returns the data (and label) at the given index.
 
-4. **DataLoader features**:
-   - `batch_size`: Number of samples per batch
-   - `shuffle`: Randomize data order
-   - `num_workers`: Parallel data loading workers
-   - `drop_last`: Handle incomplete last batch
+```python
+from torch.utils.data import Dataset
 
-5. **More updates per epoch** = Faster and more stable training
+class MyDataset(Dataset):
+    def __init__(self, features, labels, transform=None):
+        # How data is loaded / stored
+        self.features = features
+        self.labels = labels
+        self.transform = transform
+
+    def __len__(self):
+        # Total number of samples
+        return len(self.features)
+
+    def __getitem__(self, index):
+        # Return one sample (and its label) by index
+        X = self.features[index]
+        y = self.labels[index]
+        if self.transform:
+            X = self.transform(X)
+        return X, y
+```
 
 ---
 
-## Next Steps
+## DataLoader Class
 
-Now that we understand why Dataset & DataLoader are essential, we'll learn:
-- How to create custom `Dataset` classes in PyTorch
-- How to use `DataLoader` with all its features
-- How to implement transformations effectively
-- How to handle different batch sizes and shuffling strategies
-- Best practices for choosing batch size and number of workers
-- Real-world examples with images, text, and custom data
+The `DataLoader` wraps a `Dataset` and handles **batching**, **shuffling**, and **parallel loading** for you.
+
+```python
+from torch.utils.data import DataLoader
+
+dataloader = DataLoader(
+    dataset,          # Your Dataset object
+    batch_size=32,    # Samples per batch
+    shuffle=True,     # Shuffle at the start of each epoch
+    num_workers=4,    # Parallel workers for loading
+    drop_last=False   # Whether to drop the incomplete last batch
+)
+```
+
+### DataLoader Control Flow
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                  DataLoader Control Flow                     │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  Start of each epoch                                        │
+│        │                                                     │
+│        ▼                                                     │
+│  ┌─────────────────────────────────┐                        │
+│  │  Sampler shuffles all indices   │  ← (if shuffle=True)  │
+│  │  [5, 2, 8, 1, 9, 3, 7, 0, ...]  │                        │
+│  └─────────────────────────────────┘                        │
+│        │                                                     │
+│        ▼                                                     │
+│  ┌─────────────────────────────────┐                        │
+│  │  Divide indices into chunks     │                        │
+│  │  of batch_size                  │                        │
+│  │  [5,2,8,1] [9,3,7,0] [...]      │                        │
+│  └─────────────────────────────────┘                        │
+│        │                                                     │
+│        ▼  (for each chunk)                                   │
+│  ┌─────────────────────────────────┐                        │
+│  │  Fetch samples from Dataset     │                        │
+│  │  dataset[5], dataset[2], ...    │  ← calls __getitem__  │
+│  └─────────────────────────────────┘                        │
+│        │                                                     │
+│        ▼                                                     │
+│  ┌─────────────────────────────────┐                        │
+│  │  collate_fn combines samples    │                        │
+│  │  into a single batch tensor     │                        │
+│  └─────────────────────────────────┘                        │
+│        │                                                     │
+│        ▼                                                     │
+│  ┌─────────────────────────────────┐                        │
+│  │  Batch returned to training     │                        │
+│  │  loop → model(batch_X)          │                        │
+│  └─────────────────────────────────┘                        │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Step-by-step:**
+
+1. **Shuffle indices** — At the start of each epoch, if `shuffle=True`, the DataLoader uses a `Sampler` to randomly reorder all sample indices.
+2. **Divide into chunks** — The shuffled indices are split into chunks of size `batch_size`.
+3. **Fetch samples** — For each index in a chunk, `dataset.__getitem__(index)` is called to retrieve the individual sample (potentially across multiple parallel workers via `num_workers`).
+4. **Collate into batch** — The individual samples are collected and combined into a single batched tensor using `collate_fn` (the default handles most standard cases automatically).
+5. **Return to training loop** — The final batch `(batch_X, batch_y)` is yielded to the `for` loop in your training code.
+
+---
