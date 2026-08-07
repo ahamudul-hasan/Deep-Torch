@@ -1,14 +1,9 @@
+# Use Python 3.12.10 with the project virtual environment at .venv.
+
 # PyTorch and related libraries
-# For CUDA support (GPU acceleration), install PyTorch with CUDA:
-# Visit https://pytorch.org/get-started/locally/ for the latest installation command
-# 
-# For CUDA 11.8:
-# pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
-#
-# For CUDA 12.1:
-# pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
-#
-# For CPU only (no GPU) - installs latest versions:
+# CUDA-enabled PyTorch wheels are resolved from the PyTorch index below.
+--extra-index-url https://download.pytorch.org/whl/cu121
+
 torch
 torchvision
 torchaudio
